@@ -1,0 +1,63 @@
+plugins {
+    id 'java'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    // https://mvnrepository.com/artifact/io.appium/java-client
+    implementation 'io.appium:java-client:7.0.0'
+    // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
+    implementation 'org.seleniumhq.selenium:selenium-java:3.141.59'
+    // https://mvnrepository.com/artifact/io.cucumber/cucumber-java
+    implementation 'io.cucumber:cucumber-java:7.9.0'
+    // https://mvnrepository.com/artifact/net.masterthought/cucumber-reporting
+    implementation 'net.masterthought:cucumber-reporting:5.7.4'
+    // https://mvnrepository.com/artifact/io.cucumber/cucumber-junit
+    testImplementation 'io.cucumber:cucumber-junit:7.9.0'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+
+task cucumber() {
+    dependsOn assemble, testClasses
+    doLast {
+        javaexec {
+            main = "io.cucumber.core.cli.Main"
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            args = [
+                    '--plugin', 'pretty',
+                    '--plugin', 'html:build/reports/cucumber/report.html',
+                    '--plugin', 'json:build/reports/cucumber/report.json',
+                    '--glue', 'runner',
+                    'src/test/resources',
+                    '--tags'
+            ]+[suite]
+        }
+    }
+}
+
+
+task report(){
+    doLast {
+        javaexec {
+            main = "report.ReportGenerator"
+            classpath = sourceSets.test.runtimeClasspath
+        }
+    }
+}
